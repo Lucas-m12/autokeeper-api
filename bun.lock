@@ -2,12 +2,12 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "server",
+      "name": "AutoKeeper",
       "dependencies": {
-        "elysia": "latest",
+        "elysia": "^1.4.11",
       },
       "devDependencies": {
-        "bun-types": "latest",
+        "bun-types": "^1.3.0",
       },
     },
   },
