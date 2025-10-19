@@ -155,3 +155,7 @@ chore: update dependencies
 - No period at end of subject
 - Keep subject concise (≤50 chars)
 - Body explains "why" not "what"
+
+
+## Personal Rules
+1. Never try to run scripts to run server, tests or lits like `bun dev`, `bun test`.
