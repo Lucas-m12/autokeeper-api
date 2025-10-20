@@ -1,4 +1,6 @@
+import { authMiddleware } from "@auth/infra/http/middleware";
 import { Elysia, t } from "elysia";
+
 
 /**
  * Vehicles module routes
@@ -7,6 +9,7 @@ import { Elysia, t } from "elysia";
  * All routes are prefixed with /vehicles
  */
 export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
+  .use(authMiddleware)
   .get("/", () => {
     // TODO: Implement actual vehicle listing with user filtering and pagination
     // This is a placeholder implementation
