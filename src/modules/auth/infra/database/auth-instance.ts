@@ -1,17 +1,14 @@
+import { db } from "@/core/database";
 import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt } from "better-auth/plugins";
-import { Pool } from "pg";
 import { emailService } from "../email";
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 export const auth = betterAuth({
   appName: "AutoKeeper",
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
-  database: pool,
+  database: drizzleAdapter(db, {provider: "pg", usePlural: true}),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -36,6 +33,11 @@ export const auth = betterAuth({
       jwt: { expirationTime: 60 * 60 * 24 * 7 }, // 7 days
     })
   ],
+  advanced: {
+    database: {
+      generateId: false,
+    },
+  }
 })
 
 export type Session = typeof auth.$Infer.Session;
