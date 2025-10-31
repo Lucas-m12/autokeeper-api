@@ -1,3 +1,21 @@
-import { StubEmailService } from "./stub-email-service";
+import { createEmailServiceFromEnv } from "./email-config";
 
-export const emailService = new StubEmailService();
+/**
+ * Email service singleton instance
+ * Configured based on EMAIL_PROVIDER environment variable
+ */
+export const emailService = createEmailServiceFromEnv();
+
+/**
+ * Re-export types and interfaces for external use
+ */
+export type {
+  EmailService,
+  SendPasswordResetParams,
+  SendWelcomeParams,
+  SendEmailVerificationOTPParams,
+  SendPasswordResetOTPParams,
+} from "./email-service.interface";
+
+export type { EmailProvider, EmailConfig } from "./email-config";
+export { createEmailService, createEmailServiceFromEnv } from "./email-config";
