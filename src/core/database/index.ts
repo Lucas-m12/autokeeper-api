@@ -9,5 +9,6 @@
  * const profiles = await db.select().from(schema.userProfile);
  */
 
-export { db, pool } from "./connection";
+export { db } from "./connection";
 export * as schema from "./schema";
+
