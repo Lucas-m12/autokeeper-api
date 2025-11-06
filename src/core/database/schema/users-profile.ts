@@ -10,8 +10,8 @@ export const usersProfile = pgTable("users_profile", {
     .references(() => users.id, { onDelete: "cascade" }),
   timezone: text("timezone").notNull().default("America/Sao_Paulo"),
   preferences: jsonb("preferences").notNull().default({}),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at")
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),

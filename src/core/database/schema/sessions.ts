@@ -4,12 +4,12 @@ import { users } from "./users";
 
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().$defaultFn(() => uuidv7()),
-  expiresAt: timestamp("expires_at").notNull(),
+  expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
   token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at")
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
     .$defaultFn(() => new Date())
     .notNull(),
-  updatedAt: timestamp("updated_at")
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
     .$onUpdate(() => new Date())
     .notNull(),
   ipAddress: text("ip_address"),
