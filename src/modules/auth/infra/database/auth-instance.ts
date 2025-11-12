@@ -6,6 +6,7 @@ import {
   OTPVerificationEmail,
   PasswordResetEmail
 } from "@/modules/channels/infra/email";
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP, jwt, openAPI } from "better-auth/plugins";
@@ -20,6 +21,18 @@ export const auth = betterAuth({
   logger: {
     log: (level, message, ...args) => {
       logger.raw(`[${level}] ${message}`, ...args);
+    },
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.OAUTH_GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.OAUTH_GOOGLE_SECRET_KEY as string,
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
     },
   },
   emailAndPassword: {
@@ -75,12 +88,18 @@ export const auth = betterAuth({
       allowedAttempts: 3,
       storeOTP: 'hashed',
     }),
+    expo()
   ],
   advanced: {
     database: {
       generateId: false,
     },
   },
+  trustedOrigins: [
+    'autokeeper://*',
+    'exp://192.168.3.32:8081',
+    'exp://*',
+  ]
 });
 
 let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>
@@ -90,6 +109,8 @@ const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema())
 const ALLOWED_ROUTES = [
     '/sign-up/email',
     '/sign-in/email',
+    '/sign-in/social',
+    '/callback/google',
     '/sign-out',
     '/get-session',
     '/email-otp/verify-email',
