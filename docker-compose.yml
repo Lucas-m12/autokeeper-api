@@ -1,45 +1,28 @@
-version: '3.8'
-
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: autokeeper-db
+  api:
+    image: autokeeper-api:latest
+    container_name: autokeeper-api
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: autokeeper
-      POSTGRES_PASSWORD: autokeeper_dev_pass
-      POSTGRES_DB: autokeeper
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U autokeeper"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "3333:3333"
+    environment:
+      TZ: UTC
+      APP_PORT: 3333
+      LOG_LEVEL: info
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID}
+      OAUTH_GOOGLE_SECRET_KEY: ${OAUTH_GOOGLE_SECRET_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+    env_file:
+      - .env
+    networks:
+      - autokeeper-network
 
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: autokeeper-app
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3333:3333"
-  #   environment:
-  #     APP_PORT: 3333
-  #     DATABASE_URL: postgres://autokeeper:autokeeper_dev_pass@db:5432/autokeeper
-  #     LOG_LEVEL: info
-  #     NODE_ENV: production
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   volumes:
-  #     # Mount source code for development (comment out for production)
-  #     - .:/app
-  #     - /app/node_modules
-
-volumes:
-  postgres_data:
-
+networks:
+  autokeeper-network:
+    driver: bridge
