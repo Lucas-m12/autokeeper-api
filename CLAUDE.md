@@ -17,8 +17,14 @@ bun install
 # Run development server (with watch mode)
 bun run dev
 
-# Run tests (not yet implemented)
-bun run test
+# Run all tests
+bun test
+
+# Run tests in watch mode (recommended during development)
+bun test:watch
+
+# Run tests with coverage report
+bun test:coverage
 ```
 
 The server runs on port 3000 by default (configured in `src/app/server.ts`).
@@ -103,10 +109,114 @@ Emit lightweight events for key actions (retain ~90 days):
 
 ## Testing Strategy
 
-Place unit tests near the code or under `/tests`. Prioritize:
-1. **Domain layer** tests (pure business rules)
-2. **Application layer** tests (use-cases)
-3. Fast feedback loops
+### Test Framework
+
+The project uses **Bun's built-in test runner** with Jest-compatible API (`describe`, `it`, `expect`). No additional test dependencies are required.
+
+### Test Organization
+
+Tests are organized under the `/tests` directory with the following structure:
+
+```
+tests/
+├── setup.ts                 # Global test setup and utilities
+├── helpers/                 # Shared test utilities
+│   ├── logger-spy.ts       # Logger spy for assertions
+│   └── email-spy.ts        # Email service spy
+├── unit/                    # Unit tests (isolated, fast)
+│   ├── core/               # Core infrastructure tests
+│   └── modules/            # Module-specific tests
+└── integration/            # Integration tests (with database)
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+bun test
+
+# Run specific test file
+bun test tests/unit/core/logger/logger-config.test.ts
+
+# Run tests matching a pattern
+bun test --test-name-pattern "Logger"
+
+# Run in watch mode (TDD workflow)
+bun test:watch
+
+# Run with coverage report
+bun test:coverage
+
+# Run only unit tests
+bun test tests/unit/
+
+# Run only integration tests
+bun test tests/integration/
+```
+
+### Writing Tests
+
+Follow these principles:
+
+1. **AAA Pattern**: Structure tests with Arrange, Act, Assert
+2. **Descriptive Names**: Test names should explain expected behavior
+3. **Independence**: Each test should run in isolation
+4. **Fast Feedback**: Prefer unit tests over integration tests where possible
+
+Example test:
+
+```typescript
+describe('isValidPlanType', () => {
+  it('should return true for valid "free" plan type', () => {
+    // Arrange
+    const planType = 'free';
+
+    // Act
+    const result = isValidPlanType(planType);
+
+    // Assert
+    expect(result).toBe(true);
+  });
+});
+```
+
+### Testing Priorities
+
+1. **Domain layer** tests (pure business rules) - Highest priority
+2. **Application layer** tests (use-cases and validation)
+3. **Infrastructure layer** tests (with mocking for external dependencies)
+
+### Test Coverage Goals
+
+- **Domain layer**: 95%+
+- **Application layer**: 85%+
+- **Infrastructure layer**: 70%+
+- **Overall**: 80%+
+
+### Current Test Coverage
+
+The test suite includes comprehensive coverage for:
+- Core infrastructure (logger, constants)
+- Email service (configuration, providers, templates)
+- Authentication middleware
+- Plan type validation
+
+Run `bun test:coverage` to see detailed coverage reports.
+
+### Test Utilities
+
+- **LoggerSpy** (`tests/helpers/logger-spy.ts`): Spy for logger assertions
+- **EmailServiceSpy** (`tests/helpers/email-spy.ts`): Spy for email service testing
+- **mockEnv()** (`tests/setup.ts`): Mock environment variables
+- **resetEnv()** (`tests/setup.ts`): Reset environment to test defaults
+
+### CI/CD Integration
+
+Tests run automatically on:
+- Push to main branch
+- Pull requests
+
+See `.github/workflows/test.yml` for CI configuration.
 
 ## Important Constraints
 
