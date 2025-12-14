@@ -1,5 +1,6 @@
 import { db } from "@/core/database";
 import { users } from "@/core/database/schema/users";
+import { usersProfile } from "@/core/database/schema/users-profile";
 import { logger } from "@/core/logger";
 import {
   emailService,
@@ -18,6 +19,44 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {provider: "pg", usePlural: true}),
+  user: {
+    additionalFields: {
+      socialName: {
+        type: "string",
+        required: false,
+        input: true,
+      },
+      planType: {
+        type: "string",
+        required: true,
+        defaultValue: "free",
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            logger.info(`Creating profile for user ${user.id}`);
+
+            await db.insert(usersProfile).values({
+              userId: user.id,
+              timezone: "America/Sao_Paulo",
+              preferences: {},
+            });
+
+            logger.info(`Profile created successfully for user ${user.id}`);
+          } catch (error) {
+            // Log error but don't throw - allow user creation to succeed
+            logger.error(
+              `Failed to create profile for user ${user.id}: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
+        },
+      },
+    },
+  },
   logger: {
     log: (level, message, ...args) => {
       logger.raw(`[${level}] ${message}`, ...args);
@@ -57,12 +96,15 @@ export const auth = betterAuth({
       sendVerificationOTP: async ({ email, otp, type }) => {
         // Get user name from database
         const [user] = await db
-          .select({ name: users.name })
+          .select({
+            name: users.name,
+            socialName: users.socialName
+          })
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
 
-        const userName = user?.name ?? email.split('@')[0];
+        const userName = user?.socialName ?? user?.name ?? email.split('@')[0];
         logger.info(`Sending ${type} email to ${email}`);
 
         // TODO: Change to send email async (using a queue or a job)
