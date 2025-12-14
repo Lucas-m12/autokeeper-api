@@ -22,6 +22,20 @@
       "when": 1762398630651,
       "tag": "0002_conscious_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1765740779244,
+      "tag": "0003_equal_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765742136148,
+      "tag": "0004_reflective_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }
