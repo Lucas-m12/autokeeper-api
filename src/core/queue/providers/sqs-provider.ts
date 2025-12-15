@@ -17,20 +17,23 @@ import type {
 
 export interface SQSConfig {
   region: string;
-  accessKeyId: string;
-  secretAccessKey: string;
+  queueUrl: string;
   endpoint?: string;
-  queueUrlPrefix: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 }
 
 export function createSQSQueueService(config: SQSConfig): QueueService {
   const clientConfig: SQSClientConfig = {
     region: config.region,
-    credentials: {
+  };
+
+  if (config.accessKeyId && config.secretAccessKey) {
+    clientConfig.credentials = {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
-    },
-  };
+    };
+  }
 
   if (config.endpoint) {
     clientConfig.endpoint = config.endpoint;
@@ -42,8 +45,7 @@ export function createSQSQueueService(config: SQSConfig): QueueService {
     { polling: boolean; handler: MessageHandler<unknown> }
   >();
 
-  const getQueueUrl = (queueName: string) =>
-    `${config.queueUrlPrefix}/${queueName}`;
+  const getQueueUrl = (_queueName: string) => config.queueUrl;
 
   return {
     async publish<T>(

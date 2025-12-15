@@ -12,27 +12,24 @@ export function createQueueService(config: QueueConfig): QueueService {
       return createStubQueueService();
 
     case "sqs": {
+      const queueUrl = process.env.AWS_SQS_QUEUE_URL;
+
+      if (!queueUrl) {
+        throw new Error("AWS_SQS_QUEUE_URL is required for SQS provider");
+      }
+
       const sqsConfig: SQSConfig = {
         region: process.env.AWS_REGION || "us-east-1",
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        queueUrl,
         endpoint: process.env.AWS_SQS_ENDPOINT,
-        queueUrlPrefix: process.env.AWS_SQS_QUEUE_URL_PREFIX!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       };
-
-      if (!sqsConfig.accessKeyId || !sqsConfig.secretAccessKey) {
-        throw new Error(
-          "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required for SQS provider"
-        );
-      }
-
-      if (!sqsConfig.queueUrlPrefix) {
-        throw new Error("AWS_SQS_QUEUE_URL_PREFIX is required for SQS provider");
-      }
 
       logger.info("[QueueConfig] Using SQS provider", {
         region: sqsConfig.region,
         hasEndpoint: !!sqsConfig.endpoint,
+        hasCredentials: !!(sqsConfig.accessKeyId && sqsConfig.secretAccessKey),
       });
 
       return createSQSQueueService(sqsConfig);

@@ -22,9 +22,9 @@ mock.module("@aws-sdk/client-sqs", () => ({
 describe("SQS Provider", () => {
   const config: SQSConfig = {
     region: "us-east-1",
+    queueUrl: "http://localhost:4566/000000000000/test-queue",
     accessKeyId: "test-key",
     secretAccessKey: "test-secret",
-    queueUrlPrefix: "http://localhost:4566/000000000000",
   };
 
   beforeEach(() => {
@@ -35,18 +35,15 @@ describe("SQS Provider", () => {
     it("should send message to correct queue URL", async () => {
       // Arrange
       const queueService = createSQSQueueService(config);
-      const queueName = "test-queue";
       const data = { foo: "bar" };
 
       // Act
-      await queueService.publish(queueName, data);
+      await queueService.publish("test-queue", data);
 
       // Assert
       expect(mockSend).toHaveBeenCalledTimes(1);
       const command = mockSend.mock.calls[0][0];
-      expect(command.input.QueueUrl).toBe(
-        `${config.queueUrlPrefix}/${queueName}`
-      );
+      expect(command.input.QueueUrl).toBe(config.queueUrl);
     });
 
     it("should return a message ID", async () => {
