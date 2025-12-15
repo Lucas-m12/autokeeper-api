@@ -2,11 +2,7 @@ import { db } from "@/core/database";
 import { users } from "@/core/database/schema/users";
 import { usersProfile } from "@/core/database/schema/users-profile";
 import { logger } from "@/core/logger";
-import {
-  emailService,
-  OTPVerificationEmail,
-  PasswordResetEmail
-} from "@/modules/channels/infra/email";
+import { emailQueueService } from "@/modules/channels/infra/email/email-queue.service";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -105,21 +101,20 @@ export const auth = betterAuth({
           .limit(1);
 
         const userName = user?.socialName ?? user?.name ?? email.split('@')[0];
-        logger.info(`Sending ${type} email to ${email}`);
+        logger.info(`Queueing ${type} email to ${email}`);
 
-        // TODO: Change to send email async (using a queue or a job)
         if (type === "email-verification") {
-          await emailService.send({
+          await emailQueueService.queueEmail({
             to: email,
             subject: "Código de verificação - AutoKeeper",
-            template: OTPVerificationEmail,
+            templateName: "otp-verification",
             props: { userName, otp },
           });
         } else if (type === "forget-password") {
-          await emailService.send({
+          await emailQueueService.queueEmail({
             to: email,
             subject: "Redefinição de senha - AutoKeeper",
-            template: PasswordResetEmail,
+            templateName: "password-reset",
             props: { userName, otp },
           });
         }
