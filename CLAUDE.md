@@ -31,30 +31,116 @@ The server runs on port 3000 by default (configured in `src/app/server.ts`).
 
 ## Architecture & Code Organization
 
-### Layered Module Structure
+### Ports & Adapters (Hexagonal Architecture)
 
-The codebase follows a **domain/application/infra** layering pattern within feature modules:
+The codebase follows a **ports & adapters** pattern within feature modules. This enables dependency injection, testability, and swappable implementations.
 
 ```
 src/
-├── modules/          # Feature modules (each with domain/application/infra)
+├── modules/          # Feature modules
 │   ├── accounts/     # User & profile (timezone)
 │   ├── vehicles/     # Vehicle CRUD (type, year/model, plate, km)
 │   ├── reminders/    # Reminder lifecycle, state machine, snooze, undo
 │   ├── plans/        # Feature gating (MVP: 1 vehicle free, in-app only)
 │   ├── admin/        # Read-only ops/support views
-│   ├── channels/     # (Stubbed) WhatsApp/Email adapters for post-MVP
-│   └── exports/      # (Stubbed) CSV/PDF dossier for post-MVP
+│   ├── channels/     # WhatsApp/Email adapters
+│   └── exports/      # CSV/PDF dossier for post-MVP
 ├── app/              # Elysia bootstrap (routes + plugins)
 ├── jobs/             # Scheduled jobs
 │   └── daily-status-eval/  # 09:00 status evaluation job
 └── core/             # Shared utilities and types
 ```
 
-**Layer responsibilities:**
-- **domain**: Pure TypeScript business rules (side-effect-free, functional preferred)
-- **application**: Use-cases, DTOs, validation logic
-- **infra**: HTTP controllers (Elysia), database adapters, external providers
+### Module Structure
+
+Each module follows this layered structure:
+
+```
+src/modules/{module}/
+├── index.ts                      # Public API exports
+├── application/                  # Application layer
+│   ├── errors.ts                 # Custom error classes
+│   ├── {resource}.repository.ts  # PORT (interface)
+│   └── {resource}.service.ts     # Application service
+└── infra/                        # Infrastructure layer
+    ├── database/
+    │   ├── index.ts              # Singleton exports
+    │   └── drizzle-{resource}.repository.ts  # ADAPTER (implementation)
+    └── http/
+        └── routes.ts             # Thin HTTP controller
+```
+
+### Layer Responsibilities
+
+| Layer | Contains | Responsibility |
+|-------|----------|----------------|
+| **application** | Interfaces (ports), services, errors, DTOs | Business logic, orchestration, validation |
+| **infra/database** | Repository implementations (adapters) | Database queries with Drizzle ORM |
+| **infra/http** | Routes | HTTP concerns only (validation schemas, status codes) |
+
+### Key Patterns
+
+**1. Repository Interface (PORT)**
+```typescript
+// application/profile.repository.ts
+export interface ProfileRepository {
+  findByUserId(userId: string): Promise<ProfileData | null>;
+  updateUser(userId: string, data: UpdateUserData): Promise<void>;
+}
+```
+
+**2. Repository Implementation (ADAPTER)**
+```typescript
+// infra/database/drizzle-profile.repository.ts
+export class DrizzleProfileRepository implements ProfileRepository {
+  async findByUserId(userId: string): Promise<ProfileData | null> {
+    // Drizzle ORM implementation
+  }
+}
+```
+
+**3. Application Service**
+```typescript
+// application/profile.service.ts
+export class ProfileService {
+  constructor(private repository: ProfileRepository = profileRepository) {}
+
+  async getProfile(userId: string): Promise<ProfileData> {
+    // Business logic with dependency injection
+  }
+}
+export const profileService = new ProfileService();
+```
+
+**4. Thin Controller**
+```typescript
+// infra/http/routes.ts
+.get("/profile", async (ctx) => {
+  try {
+    return await profileService.getProfile(user.id);
+  } catch (error) {
+    if (error instanceof ProfileNotFoundError) {
+      ctx.set.status = 404;
+      throw error;
+    }
+    throw error;
+  }
+})
+```
+
+**5. Custom Error Classes**
+```typescript
+// application/errors.ts
+export class ProfileNotFoundError extends Error {
+  readonly code = "PROFILE_NOT_FOUND";
+  constructor() { super("Profile not found"); }
+}
+```
+
+### Reference Modules
+
+- **accounts/** - Complete example with repository, service, and routes
+- **channels/email/** - Example with multiple adapters (resend, stub providers)
 
 ### Reminder State Machine
 
