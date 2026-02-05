@@ -1,4 +1,24 @@
 services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: autokeeper-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - DEFAULT_REGION=us-east-1
+      - DEBUG=1
+    volumes:
+      - "./localstack-init:/etc/localstack/init/ready.d"
+      - "localstack_data:/var/lib/localstack"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autokeeper-network
+
   api:
     image: autokeeper-api:latest
     container_name: autokeeper-api
@@ -10,18 +30,33 @@ services:
       APP_PORT: 3333
       LOG_LEVEL: info
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
-      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID}
-      OAUTH_GOOGLE_SECRET_KEY: ${OAUTH_GOOGLE_SECRET_KEY}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      EMAIL_FROM: ${EMAIL_FROM}
-      EMAIL_PROVIDER: ${EMAIL_PROVIDER}
     env_file:
       - .env
+    depends_on:
+      localstack:
+        condition: service_healthy
     networks:
       - autokeeper-network
+
+  worker:
+    image: autokeeper-api:latest
+    container_name: autokeeper-worker
+    restart: unless-stopped
+    command: ["bun", "run", "src/workers/email-worker.ts"]
+    environment:
+      TZ: UTC
+      LOG_LEVEL: info
+      NODE_ENV: production
+    env_file:
+      - .env
+    depends_on:
+      localstack:
+        condition: service_healthy
+    networks:
+      - autokeeper-network
+
+volumes:
+  localstack_data:
 
 networks:
   autokeeper-network:
