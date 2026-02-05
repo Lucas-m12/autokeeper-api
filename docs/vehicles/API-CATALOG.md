@@ -1,6 +1,6 @@
 # Vehicles Catalog API
 
-Base URL: `http://localhost:3000/vehicles`
+Base URL: `http://localhost:3333/vehicles`
 
 Authentication: Bearer token required for POST requests
 
@@ -11,19 +11,19 @@ Authentication: Bearer token required for POST requests
 ### List Brands
 
 ```bash
-curl -X GET "http://localhost:3000/vehicles/brands" \
+curl -X GET "http://localhost:3333/vehicles/brands" \
   -H "Content-Type: application/json"
 ```
 
 With filters:
 ```bash
-curl -X GET "http://localhost:3000/vehicles/brands?type=CARRO&search=Honda&limit=10" \
+curl -X GET "http://localhost:3333/vehicles/brands?type=CARRO&search=Honda&limit=10" \
   -H "Content-Type: application/json"
 ```
 
 Next page (cursor pagination):
 ```bash
-curl -X GET "http://localhost:3000/vehicles/brands?cursor=0194fc2a-..." \
+curl -X GET "http://localhost:3333/vehicles/brands?cursor=0194fc2a-..." \
   -H "Content-Type: application/json"
 ```
 
@@ -49,7 +49,7 @@ Response:
 ### Create Brand
 
 ```bash
-curl -X POST "http://localhost:3000/vehicles/brands" \
+curl -X POST "http://localhost:3333/vehicles/brands" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -62,7 +62,7 @@ curl -X POST "http://localhost:3000/vehicles/brands" \
 ### Get Brand by ID
 
 ```bash
-curl -X GET "http://localhost:3000/vehicles/brands/{id}" \
+curl -X GET "http://localhost:3333/vehicles/brands/{id}" \
   -H "Content-Type: application/json"
 ```
 
@@ -73,13 +73,13 @@ curl -X GET "http://localhost:3000/vehicles/brands/{id}" \
 ### List Models by Brand
 
 ```bash
-curl -X GET "http://localhost:3000/vehicles/brands/{brandId}/models" \
+curl -X GET "http://localhost:3333/vehicles/brands/{brandId}/models" \
   -H "Content-Type: application/json"
 ```
 
 With filters:
 ```bash
-curl -X GET "http://localhost:3000/vehicles/brands/{brandId}/models?type=CARRO" \
+curl -X GET "http://localhost:3333/vehicles/brands/{brandId}/models?type=CARRO" \
   -H "Content-Type: application/json"
 ```
 
@@ -105,7 +105,7 @@ Response:
 ### Create Model
 
 ```bash
-curl -X POST "http://localhost:3000/vehicles/brands/{brandId}/models" \
+curl -X POST "http://localhost:3333/vehicles/brands/{brandId}/models" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -121,13 +121,13 @@ curl -X POST "http://localhost:3000/vehicles/brands/{brandId}/models" \
 ### List Catalogs by Model
 
 ```bash
-curl -X GET "http://localhost:3000/vehicles/models/{modelId}/catalogs" \
+curl -X GET "http://localhost:3333/vehicles/models/{modelId}/catalogs" \
   -H "Content-Type: application/json"
 ```
 
 With year range filter:
 ```bash
-curl -X GET "http://localhost:3000/vehicles/models/{modelId}/catalogs?yearFrom=2020&yearTo=2024" \
+curl -X GET "http://localhost:3333/vehicles/models/{modelId}/catalogs?yearFrom=2020&yearTo=2024" \
   -H "Content-Type: application/json"
 ```
 
@@ -156,7 +156,7 @@ Response:
 ### Create Catalog Entry
 
 ```bash
-curl -X POST "http://localhost:3000/vehicles/models/{modelId}/catalogs" \
+curl -X POST "http://localhost:3333/vehicles/models/{modelId}/catalogs" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -171,7 +171,7 @@ curl -X POST "http://localhost:3000/vehicles/models/{modelId}/catalogs" \
 ### Search Catalogs
 
 ```bash
-curl -X GET "http://localhost:3000/vehicles/catalogs/search?brand=Honda&year=2024" \
+curl -X GET "http://localhost:3333/vehicles/catalogs/search?brand=Honda&year=2024" \
   -H "Content-Type: application/json"
 ```
 
