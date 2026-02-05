@@ -1,21 +1,25 @@
-import { authMiddleware } from "@auth/infra/http/middleware";
 import { User } from "@auth/infra/database/auth-instance";
+import { authMiddleware } from "@auth/infra/http/middleware";
 import { Elysia, t } from "elysia";
 import { BrandService } from "../../application/brand.service";
-import { ModelService } from "../../application/model.service";
 import { CatalogService } from "../../application/catalog.service";
+import { VehicleError } from "../../application/errors";
+import { ModelService } from "../../application/model.service";
 import {
   brandRepository,
-  modelRepository,
   catalogRepository,
+  modelRepository,
 } from "../database";
-import { VehicleError } from "../../application/errors";
 
 const brandSvc = new BrandService(brandRepository);
 const modelSvc = new ModelService(modelRepository);
 const catalogSvc = new CatalogService(catalogRepository);
 
-function handleError(error: unknown, set: { status: number }) {
+type SetContext = {
+  status: number;
+};
+
+function handleError(error: unknown, set: SetContext) {
   if (error instanceof VehicleError) {
     set.status = error.status;
   }
@@ -104,11 +108,12 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
   )
   .post(
     "/brands",
-    async ({ body, user, set }) => {
+    async ({ body, set, ...ctx }) => {
       try {
-        return await brandSvc.createBrand((user as User).id, body);
+        const user = (ctx as unknown as { user: User }).user;
+        return await brandSvc.createBrand(user.id, body);
       } catch (error) {
-        handleError(error, set);
+        handleError(error, set as SetContext);
       }
     },
     {
@@ -126,16 +131,16 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
     }
   )
   .get(
-    "/brands/:id",
+    "/brands/:brandId",
     async ({ params, set }) => {
       try {
-        return await brandSvc.getBrand(params.id);
+        return await brandSvc.getBrand(params.brandId);
       } catch (error) {
-        handleError(error, set);
+        handleError(error, set as SetContext);
       }
     },
     {
-      params: t.Object({ id: t.String({ format: "uuid" }) }),
+      params: t.Object({ brandId: t.String({ format: "uuid" }) }),
       detail: {
         summary: "Get brand by ID",
         tags: ["Vehicles", "Catalog"],
@@ -151,7 +156,7 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
       try {
         return await modelSvc.listModelsByBrand(params.brandId, query);
       } catch (error) {
-        handleError(error, set);
+        handleError(error, set as SetContext);
       }
     },
     {
@@ -169,11 +174,12 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
   )
   .post(
     "/brands/:brandId/models",
-    async ({ params, body, user, set }) => {
+    async ({ params, body, set, ...ctx }) => {
       try {
-        return await modelSvc.createModel((user as User).id, params.brandId, body);
+        const user = (ctx as unknown as { user: User }).user;
+        return await modelSvc.createModel(user.id, params.brandId, body);
       } catch (error) {
-        handleError(error, set);
+        handleError(error, set as SetContext);
       }
     },
     {
@@ -188,6 +194,23 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
       },
     }
   )
+  .get(
+    "/models/:modelId",
+    async ({ params, set }) => {
+      try {
+        return await modelSvc.getModel(params.modelId);
+      } catch (error) {
+        handleError(error, set as SetContext);
+      }
+    },
+    {
+      params: t.Object({ modelId: t.String({ format: "uuid" }) }),
+      detail: {
+        summary: "Get model by ID",
+        tags: ["Vehicles", "Catalog"],
+      },
+    }
+  )
 
   // === CATALOGS ===
 
@@ -197,7 +220,7 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
       try {
         return await catalogSvc.listCatalogsByModel(params.modelId, query);
       } catch (error) {
-        handleError(error, set);
+        handleError(error, set as SetContext);
       }
     },
     {
@@ -216,11 +239,12 @@ export const vehiclesRoutes = new Elysia({ prefix: "/vehicles" })
   )
   .post(
     "/models/:modelId/catalogs",
-    async ({ params, body, user, set }) => {
+    async ({ params, body, set, ...ctx }) => {
       try {
-        return await catalogSvc.createCatalog((user as User).id, params.modelId, body);
+        const user = (ctx as unknown as { user: User }).user;
+        return await catalogSvc.createCatalog(user.id, params.modelId, body);
       } catch (error) {
-        handleError(error, set);
+        handleError(error, set as SetContext);
       }
     },
     {

@@ -24,6 +24,15 @@ export class ModelService {
     return this.repository.findByBrand(brandId, filters);
   }
 
+  async getModel(id: string) {
+    const model = await this.repository.findById(id);
+    if (!model) {
+      logger.warn("Model not found", { modelId: id });
+      throw new ModelNotFoundError();
+    }
+    return model;
+  }
+
   async createModel(
     userId: string,
     brandId: string,
